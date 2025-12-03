@@ -469,10 +469,10 @@ export default function Landing() {
   return (
     <div className="w-full overflow-hidden">
       <div ref={navbarRef} className="z-50 opacity-0 fixed top-2 sm:top-6 md:top-10 left-2 sm:left-6 md:left-10 right-2 sm:right-6 md:right-10 px-3 sm:px-6 py-2 sm:py-4 transition-all duration-300">
-        <div className="flex justify-between items-center gap-4">
-          {/* Dynamic Color Controls */}
-          <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2 max-w-2xl overflow-x-auto">
-            <label className="text-white text-sm font-medium whitespace-nowrap">
+        <div className="flex items-center gap-4">
+          {/* Dynamic Color Controls - Takes remaining space */}
+          <div className="flex-1 flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2 overflow-x-auto">
+            <label className="text-white text-sm font-medium whitespace-nowrap shrink-0">
               {memoizedShaderOptions[selectedShader].name}:
             </label>
             {getCurrentColorControls().map((control) => (
@@ -551,8 +551,9 @@ export default function Landing() {
             </div>
           </div>
           
-          {/* Shader Selector Dropdown */}
-          <div ref={dropdownRef} className="relative">
+          {/* Shader Selector Dropdown - Takes only needed space */}
+          <div ref={dropdownRef} className="w-fit">
+            <div className="relative">
             <button
               className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full hover:bg-white/20 transition-all duration-300"
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -624,6 +625,7 @@ export default function Landing() {
                 ))}
               </div>
             )}
+            </div>
           </div>
         </div>
       </div>
