@@ -169,9 +169,57 @@ export default function Landing() {
     setPendingColors({ ...shaderColors });
   };
 
+  // Default colors for each shader type
+  const defaultColors = {
+    neuroNoise: {
+      colorBack: "#000000",
+      colorMid: "#FF6B35", 
+      colorFront: "#FF6B35"
+    },
+    meshGradient: {
+      color1: "#000000",
+      color2: "#FF6B35",
+      color3: "#FF8C42",
+      color4: "#FF6B35"
+    },
+    iridescence: {
+      r: 0.93,
+      g: 0.41,
+      b: 0.09
+    },
+    metaballs: {
+      colorBack: "#000000",
+      colorMid: "#FF6B35",
+      colorFront: "#FF8C42"
+    }
+  };
+
+  // Restore default colors for current shader and auto-apply
+  const restoreDefaultColors = () => {
+    const shaderTypes = ['neuroNoise', 'meshGradient', 'iridescence', 'iridescence', 'metaballs'];
+    const currentShaderType = shaderTypes[selectedShader] as keyof typeof defaultColors;
+    
+    // Update both pending and applied colors simultaneously
+    const newColors = {
+      ...shaderColors,
+      [currentShaderType]: { ...defaultColors[currentShaderType] }
+    };
+    
+    setPendingColors(newColors);
+    setShaderColors(newColors);
+  };
+
   // Check if there are pending changes
   const hasPendingChanges = () => {
     return JSON.stringify(shaderColors) !== JSON.stringify(pendingColors);
+  };
+
+  // Check if current shader is using default colors
+  const isUsingDefaultColors = () => {
+    const shaderTypes = ['neuroNoise', 'meshGradient', 'iridescence', 'iridescence', 'metaballs'];
+    const currentShaderType = shaderTypes[selectedShader] as keyof typeof defaultColors;
+    
+    return JSON.stringify(shaderColors[currentShaderType]) === JSON.stringify(defaultColors[currentShaderType]);
   };
 
   // Types for color controls
@@ -422,8 +470,20 @@ export default function Landing() {
               </div>
             ))}
             
-            {/* Apply/Reset Buttons */}
+            {/* Control Buttons */}
             <div className="flex items-center gap-2">
+              <button
+                onClick={restoreDefaultColors}
+                className={`px-3 py-1 text-white text-xs font-medium rounded-full transition-all duration-200 ${
+                  isUsingDefaultColors() 
+                    ? 'bg-orange-600/50 hover:bg-orange-600/70 cursor-not-allowed' 
+                    : 'bg-orange-600 hover:bg-orange-700 cursor-pointer'
+                }`}
+                title={isUsingDefaultColors() ? "Already using default colors" : "Restore default colors for current shader"}
+                disabled={isUsingDefaultColors()}
+              >
+                Default
+              </button>
               <button
                 onClick={resetPendingChanges}
                 className={`px-3 py-1 text-white text-xs font-medium rounded-full transition-all duration-200 ${
