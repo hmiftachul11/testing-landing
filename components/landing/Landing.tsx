@@ -77,76 +77,69 @@ export default function Landing() {
     }
   });
 
-  // Dynamic shader configurations based on individual color parameters
-  const getShaderOptions = () => {
-    return [
-      {
-        name: 'Neuro Noise',
-        component: NeuroNoise,
-        props: {
-          className: "w-full h-full",
-          colorBack: shaderColors.neuroNoise.colorBack,
-          colorMid: shaderColors.neuroNoise.colorMid,
-          colorFront: shaderColors.neuroNoise.colorFront,
-          speed: 0.8,
-          brightness: 0.1,
-          contrast: 0.6,
-          scale: 1.5,
-        }
-      },
-      {
-        name: 'Mesh Gradient',
-        component: MeshGradient,
-        props: {
-          className: "w-full h-full",
-          colors: [
-            shaderColors.meshGradient.color1,
-            shaderColors.meshGradient.color2,
-            shaderColors.meshGradient.color3,
-            shaderColors.meshGradient.color4
-          ],
-          distortion: 1,
-          swirl: 0.8,
-          speed: 0.2,
-        }
-      },
-      {
-        name: 'Iridescence Ocean',
-        component: Iridescence,
-        props: {
-          className: "w-full h-full",
-          color: [shaderColors.iridescence.r, shaderColors.iridescence.g, shaderColors.iridescence.b] as [number, number, number],
-          speed: 1,
-          amplitude: 0.05,
-          mouseReact: true,
-        }
-      },
-      {
-        name: 'Iridescence Orbit',
-        component: Iridescence,
-        props: {
-          className: "w-full h-full",
-          color: [shaderColors.iridescence.r, shaderColors.iridescence.g, shaderColors.iridescence.b] as [number, number, number],
-          speed: 1,
-          amplitude: 0.05,
-          mouseReact: true,
-        }
-      },
-      {
-        name: 'Metaballs',
-        component: Metaballs,
-        props: {
-          className: "w-full h-full",
-          colorBack: shaderColors.metaballs.colorBack,
-          colorMid: shaderColors.metaballs.colorMid,
-          colorFront: shaderColors.metaballs.colorFront,
-          speed: 0.3,
-          brightness: 0.2,
-          contrast: 0.7,
-        }
+  // State for applied shader options - only updates when Apply is clicked
+  const [appliedShaderOptions, setAppliedShaderOptions] = useState([
+    {
+      name: 'Neuro Noise',
+      component: NeuroNoise,
+      props: {
+        className: "w-full h-full",
+        colorBack: "#000000",
+        colorMid: "#FF6B35",
+        colorFront: "#FF6B35",
+        speed: 0.8,
+        brightness: 0.1,
+        contrast: 0.6,
+        scale: 1.5,
       }
-    ];
-  };
+    },
+    {
+      name: 'Mesh Gradient',
+      component: MeshGradient,
+      props: {
+        className: "w-full h-full",
+        colors: ["#000000", "#FF6B35", "#FF8C42", "#FF6B35"],
+        distortion: 1,
+        swirl: 0.8,
+        speed: 0.2,
+      }
+    },
+    {
+      name: 'Iridescence Ocean',
+      component: Iridescence,
+      props: {
+        className: "w-full h-full",
+        color: [0.93, 0.41, 0.09] as [number, number, number],
+        speed: 1,
+        amplitude: 0.05,
+        mouseReact: true,
+      }
+    },
+    {
+      name: 'Iridescence Orbit',
+      component: Iridescence,
+      props: {
+        className: "w-full h-full",
+        color: [0.93, 0.41, 0.09] as [number, number, number],
+        speed: 1,
+        amplitude: 0.05,
+        mouseReact: true,
+      }
+    },
+    {
+      name: 'Metaballs',
+      component: Metaballs,
+      props: {
+        className: "w-full h-full",
+        colorBack: "#000000",
+        colorMid: "#FF6B35",
+        colorFront: "#FF8C42",
+        speed: 0.3,
+        brightness: 0.2,
+        contrast: 0.7,
+      }
+    }
+  ]);
 
   // Helper functions to update pending colors (staged changes)
   const updatePendingColor = (shaderType: string, colorKey: string, value: string | number) => {
@@ -159,9 +152,78 @@ export default function Landing() {
     }));
   };
 
-  // Apply pending changes to active shader colors
+  // Apply pending changes to active shader colors and update shader options
   const applyColorChanges = () => {
     setShaderColors({ ...pendingColors });
+    
+    // Update appliedShaderOptions with new colors
+    setAppliedShaderOptions([
+      {
+        name: 'Neuro Noise',
+        component: NeuroNoise,
+        props: {
+          className: "w-full h-full",
+          colorBack: pendingColors.neuroNoise.colorBack,
+          colorMid: pendingColors.neuroNoise.colorMid,
+          colorFront: pendingColors.neuroNoise.colorFront,
+          speed: 0.8,
+          brightness: 0.1,
+          contrast: 0.6,
+          scale: 1.5,
+        }
+      },
+      {
+        name: 'Mesh Gradient',
+        component: MeshGradient,
+        props: {
+          className: "w-full h-full",
+          colors: [
+            pendingColors.meshGradient.color1,
+            pendingColors.meshGradient.color2,
+            pendingColors.meshGradient.color3,
+            pendingColors.meshGradient.color4
+          ],
+          distortion: 1,
+          swirl: 0.8,
+          speed: 0.2,
+        }
+      },
+      {
+        name: 'Iridescence Ocean',
+        component: Iridescence,
+        props: {
+          className: "w-full h-full",
+          color: [pendingColors.iridescence.r, pendingColors.iridescence.g, pendingColors.iridescence.b] as [number, number, number],
+          speed: 1,
+          amplitude: 0.05,
+          mouseReact: true,
+        }
+      },
+      {
+        name: 'Iridescence Orbit',
+        component: Iridescence,
+        props: {
+          className: "w-full h-full",
+          color: [pendingColors.iridescence.r, pendingColors.iridescence.g, pendingColors.iridescence.b] as [number, number, number],
+          speed: 1,
+          amplitude: 0.05,
+          mouseReact: true,
+        }
+      },
+      {
+        name: 'Metaballs',
+        component: Metaballs,
+        props: {
+          className: "w-full h-full",
+          colorBack: pendingColors.metaballs.colorBack,
+          colorMid: pendingColors.metaballs.colorMid,
+          colorFront: pendingColors.metaballs.colorFront,
+          speed: 0.3,
+          brightness: 0.2,
+          contrast: 0.7,
+        }
+      }
+    ]);
   };
 
   // Reset pending changes back to current applied colors
@@ -207,6 +269,75 @@ export default function Landing() {
     
     setPendingColors(newColors);
     setShaderColors(newColors);
+    
+    // Also update the applied shader options
+    setAppliedShaderOptions([
+      {
+        name: 'Neuro Noise',
+        component: NeuroNoise,
+        props: {
+          className: "w-full h-full",
+          colorBack: newColors.neuroNoise.colorBack,
+          colorMid: newColors.neuroNoise.colorMid,
+          colorFront: newColors.neuroNoise.colorFront,
+          speed: 0.8,
+          brightness: 0.1,
+          contrast: 0.6,
+          scale: 1.5,
+        }
+      },
+      {
+        name: 'Mesh Gradient',
+        component: MeshGradient,
+        props: {
+          className: "w-full h-full",
+          colors: [
+            newColors.meshGradient.color1,
+            newColors.meshGradient.color2,
+            newColors.meshGradient.color3,
+            newColors.meshGradient.color4
+          ],
+          distortion: 1,
+          swirl: 0.8,
+          speed: 0.2,
+        }
+      },
+      {
+        name: 'Iridescence Ocean',
+        component: Iridescence,
+        props: {
+          className: "w-full h-full",
+          color: [newColors.iridescence.r, newColors.iridescence.g, newColors.iridescence.b] as [number, number, number],
+          speed: 1,
+          amplitude: 0.05,
+          mouseReact: true,
+        }
+      },
+      {
+        name: 'Iridescence Orbit',
+        component: Iridescence,
+        props: {
+          className: "w-full h-full",
+          color: [newColors.iridescence.r, newColors.iridescence.g, newColors.iridescence.b] as [number, number, number],
+          speed: 1,
+          amplitude: 0.05,
+          mouseReact: true,
+        }
+      },
+      {
+        name: 'Metaballs',
+        component: Metaballs,
+        props: {
+          className: "w-full h-full",
+          colorBack: newColors.metaballs.colorBack,
+          colorMid: newColors.metaballs.colorMid,
+          colorFront: newColors.metaballs.colorFront,
+          speed: 0.3,
+          brightness: 0.2,
+          contrast: 0.7,
+        }
+      }
+    ]);
   };
 
   // Check if there are pending changes
@@ -433,7 +564,7 @@ export default function Landing() {
           {/* Dynamic Color Controls */}
           <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2 max-w-2xl overflow-x-auto">
             <label className="text-white text-sm font-medium whitespace-nowrap">
-              {getShaderOptions()[selectedShader].name}:
+              {appliedShaderOptions[selectedShader].name}:
             </label>
             {getCurrentColorControls().map((control) => (
               <div key={control.key} className="flex items-center gap-1">
@@ -518,7 +649,7 @@ export default function Landing() {
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             >
               <span className="text-white text-sm font-medium whitespace-nowrap">
-                {getShaderOptions()[selectedShader].name}
+                {appliedShaderOptions[selectedShader].name}
               </span>
               <svg
                 width="16"
@@ -541,7 +672,7 @@ export default function Landing() {
             {/* Dropdown Menu */}
             {isDropdownOpen && (
               <div className="absolute top-full right-0 mt-2 min-w-48 bg-black/90 backdrop-blur-sm border border-white/20 rounded-xl shadow-lg overflow-hidden z-50">
-                {getShaderOptions().map((shader, index) => (
+                {appliedShaderOptions.map((shader, index) => (
                   <button
                     key={shader.name}
                     className={`w-full px-4 py-3 text-left text-white hover:bg-white/10 transition-all duration-200 flex items-center gap-3 ${
@@ -594,9 +725,8 @@ export default function Landing() {
           className="fixed inset-0 z-0 m-[-40] rounded-2xl overflow-hidden"
         >
           {(() => {
-            const shaderOptions = getShaderOptions();
-            const ShaderComponent = shaderOptions[selectedShader].component;
-            return <ShaderComponent {...shaderOptions[selectedShader].props} />;
+            const ShaderComponent = appliedShaderOptions[selectedShader].component;
+            return <ShaderComponent {...appliedShaderOptions[selectedShader].props} />;
           })()}
           <div className="absolute inset-0 bg-black/70" />
         </div>
