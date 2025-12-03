@@ -27,8 +27,33 @@ export default function Landing() {
   const [selectedShader, setSelectedShader] = useState(0);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   
-  // Individual color parameters for each shader type
+  // Applied color parameters for each shader type
   const [shaderColors, setShaderColors] = useState({
+    neuroNoise: {
+      colorBack: "#000000",
+      colorMid: "#FF6B35", 
+      colorFront: "#FF6B35"
+    },
+    meshGradient: {
+      color1: "#000000",
+      color2: "#FF6B35",
+      color3: "#FF8C42",
+      color4: "#FF6B35"
+    },
+    iridescence: {
+      r: 0.93,
+      g: 0.41,
+      b: 0.09
+    },
+    metaballs: {
+      colorBack: "#000000",
+      colorMid: "#FF6B35",
+      colorFront: "#FF8C42"
+    }
+  });
+
+  // Pending color changes (staged but not yet applied)
+  const [pendingColors, setPendingColors] = useState({
     neuroNoise: {
       colorBack: "#000000",
       colorMid: "#FF6B35", 
@@ -123,15 +148,30 @@ export default function Landing() {
     ];
   };
 
-  // Helper functions to update colors
-  const updateShaderColor = (shaderType: string, colorKey: string, value: string | number) => {
-    setShaderColors(prev => ({
+  // Helper functions to update pending colors (staged changes)
+  const updatePendingColor = (shaderType: string, colorKey: string, value: string | number) => {
+    setPendingColors(prev => ({
       ...prev,
       [shaderType]: {
         ...prev[shaderType as keyof typeof prev],
         [colorKey]: value
       }
     }));
+  };
+
+  // Apply pending changes to active shader colors
+  const applyColorChanges = () => {
+    setShaderColors({ ...pendingColors });
+  };
+
+  // Reset pending changes back to current applied colors
+  const resetPendingChanges = () => {
+    setPendingColors({ ...shaderColors });
+  };
+
+  // Check if there are pending changes
+  const hasPendingChanges = () => {
+    return JSON.stringify(shaderColors) !== JSON.stringify(pendingColors);
   };
 
   // Types for color controls
@@ -145,7 +185,7 @@ export default function Landing() {
     step?: number;
   };
 
-  // Get current shader color controls based on selected shader
+  // Get current shader color controls based on selected shader (showing pending values)
   const getCurrentColorControls = (): ColorControl[] => {
     const shaderTypes = ['neuroNoise', 'meshGradient', 'iridescence', 'iridescence', 'metaballs'];
     const shaderType = shaderTypes[selectedShader];
@@ -153,28 +193,28 @@ export default function Landing() {
     switch (shaderType) {
       case 'neuroNoise':
         return [
-          { key: 'colorBack', label: 'Back', value: shaderColors.neuroNoise.colorBack, type: 'color' },
-          { key: 'colorMid', label: 'Mid', value: shaderColors.neuroNoise.colorMid, type: 'color' },
-          { key: 'colorFront', label: 'Front', value: shaderColors.neuroNoise.colorFront, type: 'color' }
+          { key: 'colorBack', label: 'Back', value: pendingColors.neuroNoise.colorBack, type: 'color' },
+          { key: 'colorMid', label: 'Mid', value: pendingColors.neuroNoise.colorMid, type: 'color' },
+          { key: 'colorFront', label: 'Front', value: pendingColors.neuroNoise.colorFront, type: 'color' }
         ];
       case 'meshGradient':
         return [
-          { key: 'color1', label: 'Color 1', value: shaderColors.meshGradient.color1, type: 'color' },
-          { key: 'color2', label: 'Color 2', value: shaderColors.meshGradient.color2, type: 'color' },
-          { key: 'color3', label: 'Color 3', value: shaderColors.meshGradient.color3, type: 'color' },
-          { key: 'color4', label: 'Color 4', value: shaderColors.meshGradient.color4, type: 'color' }
+          { key: 'color1', label: 'Color 1', value: pendingColors.meshGradient.color1, type: 'color' },
+          { key: 'color2', label: 'Color 2', value: pendingColors.meshGradient.color2, type: 'color' },
+          { key: 'color3', label: 'Color 3', value: pendingColors.meshGradient.color3, type: 'color' },
+          { key: 'color4', label: 'Color 4', value: pendingColors.meshGradient.color4, type: 'color' }
         ];
       case 'iridescence':
         return [
-          { key: 'r', label: 'Red', value: shaderColors.iridescence.r, type: 'range', min: 0, max: 1, step: 0.01 },
-          { key: 'g', label: 'Green', value: shaderColors.iridescence.g, type: 'range', min: 0, max: 1, step: 0.01 },
-          { key: 'b', label: 'Blue', value: shaderColors.iridescence.b, type: 'range', min: 0, max: 1, step: 0.01 }
+          { key: 'r', label: 'Red', value: pendingColors.iridescence.r, type: 'range', min: 0, max: 1, step: 0.01 },
+          { key: 'g', label: 'Green', value: pendingColors.iridescence.g, type: 'range', min: 0, max: 1, step: 0.01 },
+          { key: 'b', label: 'Blue', value: pendingColors.iridescence.b, type: 'range', min: 0, max: 1, step: 0.01 }
         ];
       case 'metaballs':
         return [
-          { key: 'colorBack', label: 'Back', value: shaderColors.metaballs.colorBack, type: 'color' },
-          { key: 'colorMid', label: 'Mid', value: shaderColors.metaballs.colorMid, type: 'color' },
-          { key: 'colorFront', label: 'Front', value: shaderColors.metaballs.colorFront, type: 'color' }
+          { key: 'colorBack', label: 'Back', value: pendingColors.metaballs.colorBack, type: 'color' },
+          { key: 'colorMid', label: 'Mid', value: pendingColors.metaballs.colorMid, type: 'color' },
+          { key: 'colorFront', label: 'Front', value: pendingColors.metaballs.colorFront, type: 'color' }
         ];
       default:
         return [];
@@ -360,7 +400,7 @@ export default function Landing() {
                       value={control.value}
                       onChange={(e) => {
                         const shaderTypes = ['neuroNoise', 'meshGradient', 'iridescence', 'iridescence', 'metaballs'];
-                        updateShaderColor(shaderTypes[selectedShader], control.key, parseFloat(e.target.value));
+                        updatePendingColor(shaderTypes[selectedShader], control.key, parseFloat(e.target.value));
                       }}
                       className="w-16 h-2 bg-white/20 rounded-lg appearance-none cursor-pointer slider"
                     />
@@ -373,7 +413,7 @@ export default function Landing() {
                       value={control.value as string}
                       onChange={(e) => {
                         const shaderTypes = ['neuroNoise', 'meshGradient', 'iridescence', 'iridescence', 'metaballs'];
-                        updateShaderColor(shaderTypes[selectedShader], control.key, e.target.value);
+                        updatePendingColor(shaderTypes[selectedShader], control.key, e.target.value);
                       }}
                       className="w-6 h-6 rounded border border-white/20 bg-transparent cursor-pointer"
                     />
@@ -381,6 +421,34 @@ export default function Landing() {
                 )}
               </div>
             ))}
+            
+            {/* Apply/Reset Buttons */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={resetPendingChanges}
+                className={`px-3 py-1 text-white text-xs font-medium rounded-full transition-all duration-200 ${
+                  hasPendingChanges() 
+                    ? 'bg-gray-600 hover:bg-gray-700' 
+                    : 'bg-gray-600/50 hover:bg-gray-600/70'
+                }`}
+                title="Reset to current colors"
+                disabled={!hasPendingChanges()}
+              >
+                Reset
+              </button>
+              <button
+                onClick={applyColorChanges}
+                className={`px-3 py-1 text-white text-xs font-medium rounded-full transition-all duration-200 ${
+                  hasPendingChanges() 
+                    ? 'bg-blue-600 hover:bg-blue-700 cursor-pointer' 
+                    : 'bg-blue-600/50 hover:bg-blue-600/70 cursor-not-allowed'
+                }`}
+                title="Apply color changes"
+                disabled={!hasPendingChanges()}
+              >
+                Apply
+              </button>
+            </div>
           </div>
           
           {/* Shader Selector Dropdown */}
