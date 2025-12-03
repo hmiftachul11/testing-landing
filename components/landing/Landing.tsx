@@ -21,9 +21,11 @@ export default function Landing() {
   const bgRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const navbarRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Shader selection state
   const [selectedShader, setSelectedShader] = useState(0);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   
   // Individual color parameters for each shader type
   const [shaderColors, setShaderColors] = useState({
@@ -178,6 +180,20 @@ export default function Landing() {
         return [];
     }
   };
+
+  // Handle click outside dropdown to close it
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
@@ -367,46 +383,79 @@ export default function Landing() {
             ))}
           </div>
           
-          {/* Shader Selector Button */}
-          <div className="relative group">
+          {/* Shader Selector Dropdown */}
+          <div ref={dropdownRef} className="relative">
             <button
-              className="p-2 sm:p-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full hover:bg-white/20 transition-all duration-300"
-              onClick={() => setSelectedShader((prev) => (prev + 1) % getShaderOptions().length)}
-              title={`Current: ${getShaderOptions()[selectedShader].name}`}
+              className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full hover:bg-white/20 transition-all duration-300"
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             >
+              <span className="text-white text-sm font-medium whitespace-nowrap">
+                {getShaderOptions()[selectedShader].name}
+              </span>
               <svg
-                width="20"
-                height="20"
+                width="16"
+                height="16"
                 viewBox="0 0 24 24"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
-                className="text-white"
+                className={`text-white transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`}
               >
                 <path
-                  d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"
+                  d="M6 9L12 15L18 9"
                   stroke="currentColor"
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  fill="currentColor"
-                />
-                <path
-                  d="M8 21L8.5 19L10 18.5L8.5 18L8 16L7.5 18L6 18.5L7.5 19L8 21Z"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  fill="currentColor"
                 />
               </svg>
             </button>
             
-            {/* Tooltip */}
-            <div className="absolute bottom-full right-0 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-              <div className="bg-black/80 backdrop-blur-sm text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-                {getShaderOptions()[selectedShader].name}
+            {/* Dropdown Menu */}
+            {isDropdownOpen && (
+              <div className="absolute top-full right-0 mt-2 min-w-48 bg-black/90 backdrop-blur-sm border border-white/20 rounded-xl shadow-lg overflow-hidden z-50">
+                {getShaderOptions().map((shader, index) => (
+                  <button
+                    key={shader.name}
+                    className={`w-full px-4 py-3 text-left text-white hover:bg-white/10 transition-all duration-200 flex items-center gap-3 ${
+                      selectedShader === index ? 'bg-white/20' : ''
+                    }`}
+                    onClick={() => {
+                      setSelectedShader(index);
+                      setIsDropdownOpen(false);
+                    }}
+                  >
+                    <div className="flex-1">
+                      <div className="font-medium">{shader.name}</div>
+                      <div className="text-xs text-white/70">
+                        {index === 0 && "Neural noise pattern"}
+                        {index === 1 && "Flowing gradient mesh"}
+                        {index === 2 && "Iridescent ocean waves"}
+                        {index === 3 && "Orbital iridescence"}
+                        {index === 4 && "Organic liquid shapes"}
+                      </div>
+                    </div>
+                    {selectedShader === index && (
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="text-green-400"
+                      >
+                        <path
+                          d="M9 12L11 14L15 10"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    )}
+                  </button>
+                ))}
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
