@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Iridescence from '@/components/ui/animations/Iridescence';
@@ -77,16 +77,44 @@ export default function Landing() {
     }
   });
 
-  // State for applied shader options - only updates when Apply is clicked
-  const [appliedShaderOptions, setAppliedShaderOptions] = useState([
+  // Array A: Applied colors for shaders (used for rendering)
+  const [appliedColors, setAppliedColors] = useState({
+    neuroNoise: {
+      colorBack: "#000000",
+      colorMid: "#FF6B35", 
+      colorFront: "#FF6B35"
+    },
+    meshGradient: {
+      color1: "#000000",
+      color2: "#FF6B35",
+      color3: "#FF8C42",
+      color4: "#FF6B35"
+    },
+    iridescence: {
+      r: 0.93,
+      g: 0.41,
+      b: 0.09
+    },
+    metaballs: {
+      colorBack: "#000000",
+      colorMid: "#FF6B35",
+      colorFront: "#FF8C42"
+    }
+  });
+
+  // Array B: Staging area for color changes (empty until user makes changes)
+  const [stagingColors, setStagingColors] = useState<typeof appliedColors | null>(null);
+
+  // Memoized shader options - only changes when appliedColors (Array A) changes
+  const memoizedShaderOptions = useMemo(() => [
     {
       name: 'Neuro Noise',
       component: NeuroNoise,
       props: {
         className: "w-full h-full",
-        colorBack: "#000000",
-        colorMid: "#FF6B35",
-        colorFront: "#FF6B35",
+        colorBack: appliedColors.neuroNoise.colorBack,
+        colorMid: appliedColors.neuroNoise.colorMid,
+        colorFront: appliedColors.neuroNoise.colorFront,
         speed: 0.8,
         brightness: 0.1,
         contrast: 0.6,
@@ -98,7 +126,12 @@ export default function Landing() {
       component: MeshGradient,
       props: {
         className: "w-full h-full",
-        colors: ["#000000", "#FF6B35", "#FF8C42", "#FF6B35"],
+        colors: [
+          appliedColors.meshGradient.color1,
+          appliedColors.meshGradient.color2,
+          appliedColors.meshGradient.color3,
+          appliedColors.meshGradient.color4
+        ],
         distortion: 1,
         swirl: 0.8,
         speed: 0.2,
@@ -109,7 +142,7 @@ export default function Landing() {
       component: Iridescence,
       props: {
         className: "w-full h-full",
-        color: [0.93, 0.41, 0.09] as [number, number, number],
+        color: [appliedColors.iridescence.r, appliedColors.iridescence.g, appliedColors.iridescence.b] as [number, number, number],
         speed: 1,
         amplitude: 0.05,
         mouseReact: true,
@@ -120,7 +153,7 @@ export default function Landing() {
       component: Iridescence,
       props: {
         className: "w-full h-full",
-        color: [0.93, 0.41, 0.09] as [number, number, number],
+        color: [appliedColors.iridescence.r, appliedColors.iridescence.g, appliedColors.iridescence.b] as [number, number, number],
         speed: 1,
         amplitude: 0.05,
         mouseReact: true,
@@ -131,104 +164,44 @@ export default function Landing() {
       component: Metaballs,
       props: {
         className: "w-full h-full",
-        colorBack: "#000000",
-        colorMid: "#FF6B35",
-        colorFront: "#FF8C42",
+        colorBack: appliedColors.metaballs.colorBack,
+        colorMid: appliedColors.metaballs.colorMid,
+        colorFront: appliedColors.metaballs.colorFront,
         speed: 0.3,
         brightness: 0.2,
         contrast: 0.7,
       }
     }
-  ]);
+  ], [appliedColors]); // Only re-compute when appliedColors changes
 
-  // Helper functions to update pending colors (staged changes)
-  const updatePendingColor = (shaderType: string, colorKey: string, value: string | number) => {
-    setPendingColors(prev => ({
-      ...prev,
-      [shaderType]: {
-        ...prev[shaderType as keyof typeof prev],
-        [colorKey]: value
-      }
-    }));
+  // Helper function to update staging colors
+  const updateStagingColor = (shaderType: string, colorKey: string, value: string | number) => {
+    setStagingColors(prev => {
+      // Initialize staging with current applied colors if it's empty
+      const currentStaging = prev || { ...appliedColors };
+      
+      return {
+        ...currentStaging,
+        [shaderType]: {
+          ...currentStaging[shaderType as keyof typeof currentStaging],
+          [colorKey]: value
+        }
+      };
+    });
   };
 
-  // Apply pending changes to active shader colors and update shader options
+  // Apply staging changes to applied colors (Array B → Array A)
   const applyColorChanges = () => {
-    setShaderColors({ ...pendingColors });
-    
-    // Update appliedShaderOptions with new colors
-    setAppliedShaderOptions([
-      {
-        name: 'Neuro Noise',
-        component: NeuroNoise,
-        props: {
-          className: "w-full h-full",
-          colorBack: pendingColors.neuroNoise.colorBack,
-          colorMid: pendingColors.neuroNoise.colorMid,
-          colorFront: pendingColors.neuroNoise.colorFront,
-          speed: 0.8,
-          brightness: 0.1,
-          contrast: 0.6,
-          scale: 1.5,
-        }
-      },
-      {
-        name: 'Mesh Gradient',
-        component: MeshGradient,
-        props: {
-          className: "w-full h-full",
-          colors: [
-            pendingColors.meshGradient.color1,
-            pendingColors.meshGradient.color2,
-            pendingColors.meshGradient.color3,
-            pendingColors.meshGradient.color4
-          ],
-          distortion: 1,
-          swirl: 0.8,
-          speed: 0.2,
-        }
-      },
-      {
-        name: 'Iridescence Ocean',
-        component: Iridescence,
-        props: {
-          className: "w-full h-full",
-          color: [pendingColors.iridescence.r, pendingColors.iridescence.g, pendingColors.iridescence.b] as [number, number, number],
-          speed: 1,
-          amplitude: 0.05,
-          mouseReact: true,
-        }
-      },
-      {
-        name: 'Iridescence Orbit',
-        component: Iridescence,
-        props: {
-          className: "w-full h-full",
-          color: [pendingColors.iridescence.r, pendingColors.iridescence.g, pendingColors.iridescence.b] as [number, number, number],
-          speed: 1,
-          amplitude: 0.05,
-          mouseReact: true,
-        }
-      },
-      {
-        name: 'Metaballs',
-        component: Metaballs,
-        props: {
-          className: "w-full h-full",
-          colorBack: pendingColors.metaballs.colorBack,
-          colorMid: pendingColors.metaballs.colorMid,
-          colorFront: pendingColors.metaballs.colorFront,
-          speed: 0.3,
-          brightness: 0.2,
-          contrast: 0.7,
-        }
-      }
-    ]);
+    if (stagingColors) {
+      setAppliedColors({ ...stagingColors });
+      setShaderColors({ ...stagingColors });
+      setPendingColors({ ...stagingColors });
+    }
   };
 
-  // Reset pending changes back to current applied colors
-  const resetPendingChanges = () => {
-    setPendingColors({ ...shaderColors });
+  // Reset staging back to applied colors
+  const resetStagingChanges = () => {
+    setStagingColors(null);
   };
 
   // Default colors for each shader type
@@ -261,88 +234,21 @@ export default function Landing() {
     const shaderTypes = ['neuroNoise', 'meshGradient', 'iridescence', 'iridescence', 'metaballs'];
     const currentShaderType = shaderTypes[selectedShader] as keyof typeof defaultColors;
     
-    // Update both pending and applied colors simultaneously
+    // Update applied colors directly with defaults for current shader
     const newColors = {
-      ...shaderColors,
+      ...appliedColors,
       [currentShaderType]: { ...defaultColors[currentShaderType] }
     };
     
-    setPendingColors(newColors);
+    setAppliedColors(newColors);
     setShaderColors(newColors);
-    
-    // Also update the applied shader options
-    setAppliedShaderOptions([
-      {
-        name: 'Neuro Noise',
-        component: NeuroNoise,
-        props: {
-          className: "w-full h-full",
-          colorBack: newColors.neuroNoise.colorBack,
-          colorMid: newColors.neuroNoise.colorMid,
-          colorFront: newColors.neuroNoise.colorFront,
-          speed: 0.8,
-          brightness: 0.1,
-          contrast: 0.6,
-          scale: 1.5,
-        }
-      },
-      {
-        name: 'Mesh Gradient',
-        component: MeshGradient,
-        props: {
-          className: "w-full h-full",
-          colors: [
-            newColors.meshGradient.color1,
-            newColors.meshGradient.color2,
-            newColors.meshGradient.color3,
-            newColors.meshGradient.color4
-          ],
-          distortion: 1,
-          swirl: 0.8,
-          speed: 0.2,
-        }
-      },
-      {
-        name: 'Iridescence Ocean',
-        component: Iridescence,
-        props: {
-          className: "w-full h-full",
-          color: [newColors.iridescence.r, newColors.iridescence.g, newColors.iridescence.b] as [number, number, number],
-          speed: 1,
-          amplitude: 0.05,
-          mouseReact: true,
-        }
-      },
-      {
-        name: 'Iridescence Orbit',
-        component: Iridescence,
-        props: {
-          className: "w-full h-full",
-          color: [newColors.iridescence.r, newColors.iridescence.g, newColors.iridescence.b] as [number, number, number],
-          speed: 1,
-          amplitude: 0.05,
-          mouseReact: true,
-        }
-      },
-      {
-        name: 'Metaballs',
-        component: Metaballs,
-        props: {
-          className: "w-full h-full",
-          colorBack: newColors.metaballs.colorBack,
-          colorMid: newColors.metaballs.colorMid,
-          colorFront: newColors.metaballs.colorFront,
-          speed: 0.3,
-          brightness: 0.2,
-          contrast: 0.7,
-        }
-      }
-    ]);
+    setPendingColors(newColors);
+    setStagingColors(null); // Clear staging
   };
 
-  // Check if there are pending changes
-  const hasPendingChanges = () => {
-    return JSON.stringify(shaderColors) !== JSON.stringify(pendingColors);
+  // Check if there are staging changes
+  const hasStagingChanges = () => {
+    return stagingColors !== null;
   };
 
   // Check if current shader is using default colors
@@ -350,7 +256,7 @@ export default function Landing() {
     const shaderTypes = ['neuroNoise', 'meshGradient', 'iridescence', 'iridescence', 'metaballs'];
     const currentShaderType = shaderTypes[selectedShader] as keyof typeof defaultColors;
     
-    return JSON.stringify(shaderColors[currentShaderType]) === JSON.stringify(defaultColors[currentShaderType]);
+    return JSON.stringify(appliedColors[currentShaderType]) === JSON.stringify(defaultColors[currentShaderType]);
   };
 
   // Types for color controls
@@ -364,36 +270,39 @@ export default function Landing() {
     step?: number;
   };
 
-  // Get current shader color controls based on selected shader (showing pending values)
+  // Get current shader color controls based on selected shader (showing staging or applied values)
   const getCurrentColorControls = (): ColorControl[] => {
     const shaderTypes = ['neuroNoise', 'meshGradient', 'iridescence', 'iridescence', 'metaballs'];
     const shaderType = shaderTypes[selectedShader];
+    
+    // Use staging colors if they exist, otherwise use applied colors
+    const currentColors = stagingColors || appliedColors;
 
     switch (shaderType) {
       case 'neuroNoise':
         return [
-          { key: 'colorBack', label: 'Back', value: pendingColors.neuroNoise.colorBack, type: 'color' },
-          { key: 'colorMid', label: 'Mid', value: pendingColors.neuroNoise.colorMid, type: 'color' },
-          { key: 'colorFront', label: 'Front', value: pendingColors.neuroNoise.colorFront, type: 'color' }
+          { key: 'colorBack', label: 'Back', value: currentColors.neuroNoise.colorBack, type: 'color' },
+          { key: 'colorMid', label: 'Mid', value: currentColors.neuroNoise.colorMid, type: 'color' },
+          { key: 'colorFront', label: 'Front', value: currentColors.neuroNoise.colorFront, type: 'color' }
         ];
       case 'meshGradient':
         return [
-          { key: 'color1', label: 'Color 1', value: pendingColors.meshGradient.color1, type: 'color' },
-          { key: 'color2', label: 'Color 2', value: pendingColors.meshGradient.color2, type: 'color' },
-          { key: 'color3', label: 'Color 3', value: pendingColors.meshGradient.color3, type: 'color' },
-          { key: 'color4', label: 'Color 4', value: pendingColors.meshGradient.color4, type: 'color' }
+          { key: 'color1', label: 'Color 1', value: currentColors.meshGradient.color1, type: 'color' },
+          { key: 'color2', label: 'Color 2', value: currentColors.meshGradient.color2, type: 'color' },
+          { key: 'color3', label: 'Color 3', value: currentColors.meshGradient.color3, type: 'color' },
+          { key: 'color4', label: 'Color 4', value: currentColors.meshGradient.color4, type: 'color' }
         ];
       case 'iridescence':
         return [
-          { key: 'r', label: 'Red', value: pendingColors.iridescence.r, type: 'range', min: 0, max: 1, step: 0.01 },
-          { key: 'g', label: 'Green', value: pendingColors.iridescence.g, type: 'range', min: 0, max: 1, step: 0.01 },
-          { key: 'b', label: 'Blue', value: pendingColors.iridescence.b, type: 'range', min: 0, max: 1, step: 0.01 }
+          { key: 'r', label: 'Red', value: currentColors.iridescence.r, type: 'range', min: 0, max: 1, step: 0.01 },
+          { key: 'g', label: 'Green', value: currentColors.iridescence.g, type: 'range', min: 0, max: 1, step: 0.01 },
+          { key: 'b', label: 'Blue', value: currentColors.iridescence.b, type: 'range', min: 0, max: 1, step: 0.01 }
         ];
       case 'metaballs':
         return [
-          { key: 'colorBack', label: 'Back', value: pendingColors.metaballs.colorBack, type: 'color' },
-          { key: 'colorMid', label: 'Mid', value: pendingColors.metaballs.colorMid, type: 'color' },
-          { key: 'colorFront', label: 'Front', value: pendingColors.metaballs.colorFront, type: 'color' }
+          { key: 'colorBack', label: 'Back', value: currentColors.metaballs.colorBack, type: 'color' },
+          { key: 'colorMid', label: 'Mid', value: currentColors.metaballs.colorMid, type: 'color' },
+          { key: 'colorFront', label: 'Front', value: currentColors.metaballs.colorFront, type: 'color' }
         ];
       default:
         return [];
@@ -564,7 +473,7 @@ export default function Landing() {
           {/* Dynamic Color Controls */}
           <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2 max-w-2xl overflow-x-auto">
             <label className="text-white text-sm font-medium whitespace-nowrap">
-              {appliedShaderOptions[selectedShader].name}:
+              {memoizedShaderOptions[selectedShader].name}:
             </label>
             {getCurrentColorControls().map((control) => (
               <div key={control.key} className="flex items-center gap-1">
@@ -579,7 +488,7 @@ export default function Landing() {
                       value={control.value}
                       onChange={(e) => {
                         const shaderTypes = ['neuroNoise', 'meshGradient', 'iridescence', 'iridescence', 'metaballs'];
-                        updatePendingColor(shaderTypes[selectedShader], control.key, parseFloat(e.target.value));
+                        updateStagingColor(shaderTypes[selectedShader], control.key, parseFloat(e.target.value));
                       }}
                       className="w-16 h-2 bg-white/20 rounded-lg appearance-none cursor-pointer slider"
                     />
@@ -592,7 +501,7 @@ export default function Landing() {
                       value={control.value as string}
                       onChange={(e) => {
                         const shaderTypes = ['neuroNoise', 'meshGradient', 'iridescence', 'iridescence', 'metaballs'];
-                        updatePendingColor(shaderTypes[selectedShader], control.key, e.target.value);
+                        updateStagingColor(shaderTypes[selectedShader], control.key, e.target.value);
                       }}
                       className="w-6 h-6 rounded border border-white/20 bg-transparent cursor-pointer"
                     />
@@ -616,26 +525,26 @@ export default function Landing() {
                 Default
               </button>
               <button
-                onClick={resetPendingChanges}
+                onClick={resetStagingChanges}
                 className={`px-3 py-1 text-white text-xs font-medium rounded-full transition-all duration-200 ${
-                  hasPendingChanges() 
+                  hasStagingChanges() 
                     ? 'bg-gray-600 hover:bg-gray-700' 
                     : 'bg-gray-600/50 hover:bg-gray-600/70'
                 }`}
                 title="Reset to current colors"
-                disabled={!hasPendingChanges()}
+                disabled={!hasStagingChanges()}
               >
                 Reset
               </button>
               <button
                 onClick={applyColorChanges}
                 className={`px-3 py-1 text-white text-xs font-medium rounded-full transition-all duration-200 ${
-                  hasPendingChanges() 
+                  hasStagingChanges() 
                     ? 'bg-blue-600 hover:bg-blue-700 cursor-pointer' 
                     : 'bg-blue-600/50 hover:bg-blue-600/70 cursor-not-allowed'
                 }`}
                 title="Apply color changes"
-                disabled={!hasPendingChanges()}
+                disabled={!hasStagingChanges()}
               >
                 Apply
               </button>
@@ -649,7 +558,7 @@ export default function Landing() {
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             >
               <span className="text-white text-sm font-medium whitespace-nowrap">
-                {appliedShaderOptions[selectedShader].name}
+                {memoizedShaderOptions[selectedShader].name}
               </span>
               <svg
                 width="16"
@@ -672,7 +581,7 @@ export default function Landing() {
             {/* Dropdown Menu */}
             {isDropdownOpen && (
               <div className="absolute top-full right-0 mt-2 min-w-48 bg-black/90 backdrop-blur-sm border border-white/20 rounded-xl shadow-lg overflow-hidden z-50">
-                {appliedShaderOptions.map((shader, index) => (
+                {memoizedShaderOptions.map((shader, index) => (
                   <button
                     key={shader.name}
                     className={`w-full px-4 py-3 text-left text-white hover:bg-white/10 transition-all duration-200 flex items-center gap-3 ${
@@ -725,8 +634,8 @@ export default function Landing() {
           className="fixed inset-0 z-0 m-[-40] rounded-2xl overflow-hidden"
         >
           {(() => {
-            const ShaderComponent = appliedShaderOptions[selectedShader].component;
-            return <ShaderComponent {...appliedShaderOptions[selectedShader].props} />;
+            const ShaderComponent = memoizedShaderOptions[selectedShader].component;
+            return <ShaderComponent {...memoizedShaderOptions[selectedShader].props} />;
           })()}
           <div className="absolute inset-0 bg-black/70" />
         </div>
