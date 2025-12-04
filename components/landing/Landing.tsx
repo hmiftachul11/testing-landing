@@ -5,6 +5,7 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Iridescence from '@/components/ui/animations/Iridescence';
 import LaunchAppButton from '@/components/ui/animations/LaunchAppButton';
+import DarkVeil from '@/components/DarkVeil';
 import Feature from './Feature';
 import { HowItWork } from './HowItWork';
 import { DefiFlywheelSection } from './DefiFlywheelSection';
@@ -27,55 +28,6 @@ export default function Landing() {
   const [selectedShader, setSelectedShader] = useState(0);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   
-  // Applied color parameters for each shader type
-  const [shaderColors, setShaderColors] = useState({
-    neuroNoise: {
-      colorBack: "#000000",
-      colorMid: "#FF6B35", 
-      colorFront: "#FF6B35"
-    },
-    meshGradient: {
-      color1: "#000000",
-      color2: "#FF6B35",
-      color3: "#FF8C42",
-      color4: "#FF6B35"
-    },
-    iridescence: {
-      r: 0.93,
-      g: 0.41,
-      b: 0.09
-    },
-    metaballs: {
-      colorBack: "#000000",
-      colorMid: "#FF6B35",
-      colorFront: "#FF8C42"
-    }
-  });
-
-  // Pending color changes (staged but not yet applied)
-  const [pendingColors, setPendingColors] = useState({
-    neuroNoise: {
-      colorBack: "#000000",
-      colorMid: "#FF6B35", 
-      colorFront: "#FF6B35"
-    },
-    meshGradient: {
-      color1: "#000000",
-      color2: "#FF6B35",
-      color3: "#FF8C42",
-      color4: "#FF6B35"
-    },
-    iridescence: {
-      r: 0.93,
-      g: 0.41,
-      b: 0.09
-    },
-    metaballs: {
-      colorBack: "#000000",
-      colorMid: "#FF6B35",
-      colorFront: "#FF8C42"
-    }
-  });
 
   // Array A: Applied colors for shaders (used for rendering)
   const [appliedColors, setAppliedColors] = useState({
@@ -94,6 +46,14 @@ export default function Landing() {
       r: 0.93,
       g: 0.41,
       b: 0.09
+    },
+    darkVeil: {
+      hueShift: 226,
+      noiseIntensity: 0.1,
+      scanlineIntensity: 0.2,
+      speed: 0.5,
+      scanlineFrequency: 2,
+      warpAmount: 0.3
     },
     metaballs: {
       colorBack: "#000000",
@@ -149,14 +109,15 @@ export default function Landing() {
       }
     },
     {
-      name: 'Iridescence Orbit',
-      component: Iridescence,
+      name: 'Dark Veil',
+      component: DarkVeil,
       props: {
-        className: "w-full h-full",
-        color: [appliedColors.iridescence.r, appliedColors.iridescence.g, appliedColors.iridescence.b] as [number, number, number],
-        speed: 1,
-        amplitude: 0.05,
-        mouseReact: true,
+        hueShift: appliedColors.darkVeil.hueShift,
+        noiseIntensity: appliedColors.darkVeil.noiseIntensity,
+        scanlineIntensity: appliedColors.darkVeil.scanlineIntensity,
+        speed: appliedColors.darkVeil.speed,
+        scanlineFrequency: appliedColors.darkVeil.scanlineFrequency,
+        warpAmount: appliedColors.darkVeil.warpAmount,
       }
     },
     {
@@ -194,8 +155,6 @@ export default function Landing() {
   const applyColorChanges = () => {
     if (stagingColors) {
       setAppliedColors({ ...stagingColors });
-      setShaderColors({ ...stagingColors });
-      setPendingColors({ ...stagingColors });
     }
   };
 
@@ -222,6 +181,14 @@ export default function Landing() {
       g: 0.41,
       b: 0.09
     },
+    darkVeil: {
+      hueShift: 226,
+      noiseIntensity: 0.1,
+      scanlineIntensity: 0.2,
+      speed: 0.5,
+      scanlineFrequency: 2,
+      warpAmount: 0.3
+    },
     metaballs: {
       colorBack: "#000000",
       colorMid: "#FF6B35",
@@ -231,7 +198,7 @@ export default function Landing() {
 
   // Restore default colors for current shader and auto-apply
   const restoreDefaultColors = () => {
-    const shaderTypes = ['neuroNoise', 'meshGradient', 'iridescence', 'iridescence', 'metaballs'];
+    const shaderTypes = ['neuroNoise', 'meshGradient', 'iridescence', 'darkVeil', 'metaballs'];
     const currentShaderType = shaderTypes[selectedShader] as keyof typeof defaultColors;
     
     // Update applied colors directly with defaults for current shader
@@ -241,8 +208,6 @@ export default function Landing() {
     };
     
     setAppliedColors(newColors);
-    setShaderColors(newColors);
-    setPendingColors(newColors);
     setStagingColors(null); // Clear staging
   };
 
@@ -253,7 +218,7 @@ export default function Landing() {
 
   // Check if current shader is using default colors
   const isUsingDefaultColors = () => {
-    const shaderTypes = ['neuroNoise', 'meshGradient', 'iridescence', 'iridescence', 'metaballs'];
+    const shaderTypes = ['neuroNoise', 'meshGradient', 'iridescence', 'darkVeil', 'metaballs'];
     const currentShaderType = shaderTypes[selectedShader] as keyof typeof defaultColors;
     
     return JSON.stringify(appliedColors[currentShaderType]) === JSON.stringify(defaultColors[currentShaderType]);
@@ -272,7 +237,7 @@ export default function Landing() {
 
   // Get current shader color controls based on selected shader (showing staging or applied values)
   const getCurrentColorControls = (): ColorControl[] => {
-    const shaderTypes = ['neuroNoise', 'meshGradient', 'iridescence', 'iridescence', 'metaballs'];
+    const shaderTypes = ['neuroNoise', 'meshGradient', 'iridescence', 'darkVeil', 'metaballs'];
     const shaderType = shaderTypes[selectedShader];
     
     // Use staging colors if they exist, otherwise use applied colors
@@ -297,6 +262,13 @@ export default function Landing() {
           { key: 'r', label: 'Red', value: currentColors.iridescence.r, type: 'range', min: 0, max: 1, step: 0.01 },
           { key: 'g', label: 'Green', value: currentColors.iridescence.g, type: 'range', min: 0, max: 1, step: 0.01 },
           { key: 'b', label: 'Blue', value: currentColors.iridescence.b, type: 'range', min: 0, max: 1, step: 0.01 }
+        ];
+      case 'darkVeil':
+        return [
+          { key: 'hueShift', label: 'Hue', value: currentColors.darkVeil.hueShift, type: 'range', min: 0, max: 360, step: 1 },
+          { key: 'noiseIntensity', label: 'Noise', value: currentColors.darkVeil.noiseIntensity, type: 'range', min: 0, max: 1, step: 0.01 },
+          { key: 'scanlineIntensity', label: 'Scanline', value: currentColors.darkVeil.scanlineIntensity, type: 'range', min: 0, max: 1, step: 0.01 },
+          { key: 'warpAmount', label: 'Warp', value: currentColors.darkVeil.warpAmount, type: 'range', min: 0, max: 1, step: 0.01 }
         ];
       case 'metaballs':
         return [
@@ -469,9 +441,9 @@ export default function Landing() {
   return (
     <div className="w-full overflow-hidden">
       <div ref={navbarRef} className="z-50 opacity-0 fixed top-2 sm:top-6 md:top-10 left-2 sm:left-6 md:left-10 right-2 sm:right-6 md:right-10 px-3 sm:px-6 py-2 sm:py-4 transition-all duration-300">
-        <div className="flex items-center gap-4">
-          {/* Dynamic Color Controls - Takes remaining space */}
-          <div className="flex-1 flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2 overflow-x-auto">
+        <div className="w-full flex items-center justify-between gap-4">
+          {/* Dynamic Color Controls - Left Side */}
+          <div className="w-fit flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2 overflow-x-auto">
             <label className="text-white text-sm font-medium whitespace-nowrap shrink-0">
               {memoizedShaderOptions[selectedShader].name}:
             </label>
@@ -487,7 +459,7 @@ export default function Landing() {
                       step={control.step!}
                       value={control.value}
                       onChange={(e) => {
-                        const shaderTypes = ['neuroNoise', 'meshGradient', 'iridescence', 'iridescence', 'metaballs'];
+                        const shaderTypes = ['neuroNoise', 'meshGradient', 'iridescence', 'darkVeil', 'metaballs'];
                         updateStagingColor(shaderTypes[selectedShader], control.key, parseFloat(e.target.value));
                       }}
                       className="w-16 h-2 bg-white/20 rounded-lg appearance-none cursor-pointer slider"
@@ -500,7 +472,7 @@ export default function Landing() {
                       type="color"
                       value={control.value as string}
                       onChange={(e) => {
-                        const shaderTypes = ['neuroNoise', 'meshGradient', 'iridescence', 'iridescence', 'metaballs'];
+                        const shaderTypes = ['neuroNoise', 'meshGradient', 'iridescence', 'darkVeil', 'metaballs'];
                         updateStagingColor(shaderTypes[selectedShader], control.key, e.target.value);
                       }}
                       className="w-6 h-6 rounded border border-white/20 bg-transparent cursor-pointer"
@@ -551,7 +523,7 @@ export default function Landing() {
             </div>
           </div>
           
-          {/* Shader Selector Dropdown - Takes only needed space */}
+          {/* Shader Selector Dropdown - Right Side */}
           <div ref={dropdownRef} className="w-fit">
             <div className="relative">
             <button
@@ -599,7 +571,7 @@ export default function Landing() {
                         {index === 0 && "Neural noise pattern"}
                         {index === 1 && "Flowing gradient mesh"}
                         {index === 2 && "Iridescent ocean waves"}
-                        {index === 3 && "Orbital iridescence"}
+                        {index === 3 && "Dark neural veil effect"}
                         {index === 4 && "Organic liquid shapes"}
                       </div>
                     </div>
