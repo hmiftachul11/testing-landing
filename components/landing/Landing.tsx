@@ -87,10 +87,26 @@ export default function Landing() {
     return true; // Default to true
   };
 
+  // Load saved auto-apply state from localStorage
+  const loadSavedAutoApply = () => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('autoApply');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch {
+          console.warn('Failed to parse saved auto-apply state, using default');
+        }
+      }
+    }
+    return false; // Default to manual apply
+  };
+
   // Shader selection state
   const [selectedShader, setSelectedShader] = useState(0);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showOverlay, setShowOverlay] = useState(() => loadSavedOverlay());
+  const [autoApply, setAutoApply] = useState(() => loadSavedAutoApply());
 
   // Array A: Applied colors for shaders (used for rendering)
   const [appliedColors, setAppliedColors] = useState(() => loadSavedColors());
@@ -170,18 +186,33 @@ export default function Landing() {
 
   // Helper function to update staging colors
   const updateStagingColor = (shaderType: string, colorKey: string, value: string | number) => {
-    setStagingColors((prev: typeof appliedColors | null) => {
-      // Initialize staging with current applied colors if it's empty
-      const currentStaging = prev || { ...appliedColors };
-      
-      return {
-        ...currentStaging,
+    if (autoApply) {
+      // Auto-apply mode: directly update applied colors
+      const newColors = {
+        ...appliedColors,
         [shaderType]: {
-          ...currentStaging[shaderType as keyof typeof currentStaging],
+          ...appliedColors[shaderType as keyof typeof appliedColors],
           [colorKey]: value
         }
       };
-    });
+      setAppliedColors(newColors);
+      saveColorsToLocalStorage(newColors);
+      setStagingColors(null); // Clear staging since we're applying directly
+    } else {
+      // Manual apply mode: update staging colors
+      setStagingColors((prev: typeof appliedColors | null) => {
+        // Initialize staging with current applied colors if it's empty
+        const currentStaging = prev || { ...appliedColors };
+        
+        return {
+          ...currentStaging,
+          [shaderType]: {
+            ...currentStaging[shaderType as keyof typeof currentStaging],
+            [colorKey]: value
+          }
+        };
+      });
+    }
   };
 
   // Save colors to localStorage
@@ -202,6 +233,17 @@ export default function Landing() {
         localStorage.setItem('showOverlay', JSON.stringify(overlay));
       } catch (error) {
         console.warn('Failed to save overlay state to localStorage:', error);
+      }
+    }
+  };
+
+  // Save auto-apply state to localStorage
+  const saveAutoApplyToLocalStorage = (autoApplyState: boolean) => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('autoApply', JSON.stringify(autoApplyState));
+      } catch (error) {
+        console.warn('Failed to save auto-apply state to localStorage:', error);
       }
     }
   };
@@ -509,35 +551,64 @@ export default function Landing() {
               >
                 Default
               </button>
-              <button
-                onClick={resetStagingChanges}
-                className={`px-3 py-1 text-white text-xs font-medium rounded-full transition-all duration-200 ${
-                  hasStagingChanges() 
-                    ? 'bg-gray-600 hover:bg-gray-700' 
-                    : 'bg-gray-600/50 hover:bg-gray-600/70'
-                }`}
-                title="Reset to current colors"
-                disabled={!hasStagingChanges()}
-              >
-                Reset
-              </button>
-              <button
-                onClick={applyColorChanges}
-                className={`px-3 py-1 text-white text-xs font-medium rounded-full transition-all duration-200 ${
-                  hasStagingChanges() 
-                    ? 'bg-blue-600 hover:bg-blue-700 cursor-pointer' 
-                    : 'bg-blue-600/50 hover:bg-blue-600/70 cursor-not-allowed'
-                }`}
-                title="Apply color changes"
-                disabled={!hasStagingChanges()}
-              >
-                Apply
-              </button>
+              {!autoApply && (
+                <>
+                  <button
+                    onClick={resetStagingChanges}
+                    className={`px-3 py-1 text-white text-xs font-medium rounded-full transition-all duration-200 ${
+                      hasStagingChanges() 
+                        ? 'bg-gray-600 hover:bg-gray-700' 
+                        : 'bg-gray-600/50 hover:bg-gray-600/70'
+                    }`}
+                    title="Reset to current colors"
+                    disabled={!hasStagingChanges()}
+                  >
+                    Reset
+                  </button>
+                  <button
+                    onClick={applyColorChanges}
+                    className={`px-3 py-1 text-white text-xs font-medium rounded-full transition-all duration-200 ${
+                      hasStagingChanges() 
+                        ? 'bg-blue-600 hover:bg-blue-700 cursor-pointer' 
+                        : 'bg-blue-600/50 hover:bg-blue-600/70 cursor-not-allowed'
+                    }`}
+                    title="Apply color changes"
+                    disabled={!hasStagingChanges()}
+                  >
+                    Apply
+                  </button>
+                </>
+              )}
             </div>
           </div>
           
           {/* Right Side Controls */}
           <div className="flex items-center gap-4">
+            {/* Auto Apply Toggle Switch */}
+            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2">
+              <span className="text-white text-sm font-medium whitespace-nowrap">Auto Apply:</span>
+              <button
+                onClick={() => {
+                  const newAutoApplyState = !autoApply;
+                  setAutoApply(newAutoApplyState);
+                  saveAutoApplyToLocalStorage(newAutoApplyState);
+                  // Clear staging when switching to auto-apply mode
+                  if (newAutoApplyState && stagingColors) {
+                    setStagingColors(null);
+                  }
+                }}
+                className={`relative w-12 h-6 rounded-full transition-all duration-200 cursor-pointer ${
+                  autoApply ? 'bg-green-600' : 'bg-gray-600'
+                }`}
+              >
+                <div
+                  className={`absolute w-5 h-5 bg-white rounded-full top-0.5 transition-transform duration-200 ${
+                    autoApply ? 'translate-x-6' : 'translate-x-0.5'
+                  }`}
+                />
+              </button>
+            </div>
+            
             {/* Overlay Toggle Switch */}
             <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2">
               <span className="text-white text-sm font-medium whitespace-nowrap">Overlay:</span>
