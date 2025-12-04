@@ -27,6 +27,7 @@ export default function Landing() {
   // Shader selection state
   const [selectedShader, setSelectedShader] = useState(0);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [showOverlay, setShowOverlay] = useState(true);
   
 
   // Array A: Applied colors for shaders (used for rendering)
@@ -523,8 +524,27 @@ export default function Landing() {
             </div>
           </div>
           
-          {/* Shader Selector Dropdown - Right Side */}
-          <div ref={dropdownRef} className="w-fit">
+          {/* Right Side Controls */}
+          <div className="flex items-center gap-4">
+            {/* Overlay Toggle Switch */}
+            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2">
+              <span className="text-white text-sm font-medium whitespace-nowrap">Overlay:</span>
+              <button
+                onClick={() => setShowOverlay(!showOverlay)}
+                className={`relative w-12 h-6 rounded-full transition-all duration-200 cursor-pointer ${
+                  showOverlay ? 'bg-blue-600' : 'bg-gray-600'
+                }`}
+              >
+                <div
+                  className={`absolute w-5 h-5 bg-white rounded-full top-0.5 transition-transform duration-200 ${
+                    showOverlay ? 'translate-x-6' : 'translate-x-0.5'
+                  }`}
+                />
+              </button>
+            </div>
+            
+            {/* Shader Selector Dropdown */}
+            <div ref={dropdownRef} className="w-fit">
             <div className="relative">
             <button
               className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full hover:bg-white/20 transition-all duration-300"
@@ -599,6 +619,7 @@ export default function Landing() {
             )}
             </div>
           </div>
+          </div>
         </div>
       </div>
 
@@ -611,7 +632,7 @@ export default function Landing() {
             const ShaderComponent = memoizedShaderOptions[selectedShader].component;
             return <ShaderComponent {...memoizedShaderOptions[selectedShader].props} />;
           })()}
-          <div className="absolute inset-0 bg-black/70" />
+          {showOverlay && <div className="absolute inset-0 bg-black/70" />}
         </div>
 
         <div ref={contentRef} className="relative z-10 h-[calc(100vh-24px)] sm:h-[calc(100vh-32px)] md:h-[calc(100vh-48px)] m-2 sm:m-4 md:m-6 opacity-0">
