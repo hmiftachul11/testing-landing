@@ -24,14 +24,8 @@ export default function Landing() {
   const navbarRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Shader selection state
-  const [selectedShader, setSelectedShader] = useState(0);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [showOverlay, setShowOverlay] = useState(true);
-  
-
-  // Array A: Applied colors for shaders (used for rendering)
-  const [appliedColors, setAppliedColors] = useState({
+  // Default colors for each shader type
+  const defaultColors = {
     neuroNoise: {
       colorBack: "#000000",
       colorMid: "#FF6B35", 
@@ -61,7 +55,45 @@ export default function Landing() {
       colorMid: "#FF6B35",
       colorFront: "#FF8C42"
     }
-  });
+  };
+
+  // Load saved colors from localStorage or use defaults
+  const loadSavedColors = () => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('shaderColors');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch {
+          console.warn('Failed to parse saved colors, using defaults');
+        }
+      }
+    }
+    return defaultColors;
+  };
+
+  // Load saved overlay state from localStorage
+  const loadSavedOverlay = () => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('showOverlay');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch {
+          console.warn('Failed to parse saved overlay state, using default');
+        }
+      }
+    }
+    return true; // Default to true
+  };
+
+  // Shader selection state
+  const [selectedShader, setSelectedShader] = useState(0);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [showOverlay, setShowOverlay] = useState(() => loadSavedOverlay());
+
+  // Array A: Applied colors for shaders (used for rendering)
+  const [appliedColors, setAppliedColors] = useState(() => loadSavedColors());
 
   // Array B: Staging area for color changes (empty until user makes changes)
   const [stagingColors, setStagingColors] = useState<typeof appliedColors | null>(null);
@@ -138,7 +170,7 @@ export default function Landing() {
 
   // Helper function to update staging colors
   const updateStagingColor = (shaderType: string, colorKey: string, value: string | number) => {
-    setStagingColors(prev => {
+    setStagingColors((prev: typeof appliedColors | null) => {
       // Initialize staging with current applied colors if it's empty
       const currentStaging = prev || { ...appliedColors };
       
@@ -152,49 +184,39 @@ export default function Landing() {
     });
   };
 
+  // Save colors to localStorage
+  const saveColorsToLocalStorage = (colors: typeof appliedColors) => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('shaderColors', JSON.stringify(colors));
+      } catch (error) {
+        console.warn('Failed to save colors to localStorage:', error);
+      }
+    }
+  };
+
+  // Save overlay state to localStorage
+  const saveOverlayToLocalStorage = (overlay: boolean) => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('showOverlay', JSON.stringify(overlay));
+      } catch (error) {
+        console.warn('Failed to save overlay state to localStorage:', error);
+      }
+    }
+  };
+
   // Apply staging changes to applied colors (Array B → Array A)
   const applyColorChanges = () => {
     if (stagingColors) {
       setAppliedColors({ ...stagingColors });
+      saveColorsToLocalStorage({ ...stagingColors });
     }
   };
 
   // Reset staging back to applied colors
   const resetStagingChanges = () => {
     setStagingColors(null);
-  };
-
-  // Default colors for each shader type
-  const defaultColors = {
-    neuroNoise: {
-      colorBack: "#000000",
-      colorMid: "#FF6B35", 
-      colorFront: "#FF6B35"
-    },
-    meshGradient: {
-      color1: "#000000",
-      color2: "#FF6B35",
-      color3: "#FF8C42",
-      color4: "#FF6B35"
-    },
-    iridescence: {
-      r: 0.93,
-      g: 0.41,
-      b: 0.09
-    },
-    darkVeil: {
-      hueShift: 226,
-      noiseIntensity: 0.1,
-      scanlineIntensity: 0.2,
-      speed: 2,
-      scanlineFrequency: 2,
-      warpAmount: 0.3
-    },
-    metaballs: {
-      colorBack: "#000000",
-      colorMid: "#FF6B35",
-      colorFront: "#FF8C42"
-    }
   };
 
   // Restore default colors for current shader and auto-apply
@@ -209,6 +231,7 @@ export default function Landing() {
     };
     
     setAppliedColors(newColors);
+    saveColorsToLocalStorage(newColors);
     setStagingColors(null); // Clear staging
   };
 
@@ -222,7 +245,9 @@ export default function Landing() {
     const shaderTypes = ['neuroNoise', 'meshGradient', 'iridescence', 'darkVeil', 'metaballs'];
     const currentShaderType = shaderTypes[selectedShader] as keyof typeof defaultColors;
     
-    return JSON.stringify(appliedColors[currentShaderType]) === JSON.stringify(defaultColors[currentShaderType]);
+    // Check staging colors first if they exist, otherwise check applied colors
+    const colorsToCheck = stagingColors || appliedColors;
+    return JSON.stringify(colorsToCheck[currentShaderType]) === JSON.stringify(defaultColors[currentShaderType]);
   };
 
   // Types for color controls
@@ -487,13 +512,8 @@ export default function Landing() {
             <div className="flex items-center gap-2">
               <button
                 onClick={restoreDefaultColors}
-                className={`px-3 py-1 text-white text-xs font-medium rounded-full transition-all duration-200 ${
-                  isUsingDefaultColors() 
-                    ? 'bg-orange-600/50 hover:bg-orange-600/70 cursor-not-allowed' 
-                    : 'bg-orange-600 hover:bg-orange-700 cursor-pointer'
-                }`}
-                title={isUsingDefaultColors() ? "Already using default colors" : "Restore default colors for current shader"}
-                disabled={isUsingDefaultColors()}
+                className="px-3 py-1 text-white text-xs font-medium rounded-full transition-all duration-200 bg-orange-600 hover:bg-orange-700 cursor-pointer"
+                title="Restore default colors for current shader"
               >
                 Default
               </button>
@@ -530,7 +550,11 @@ export default function Landing() {
             <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2">
               <span className="text-white text-sm font-medium whitespace-nowrap">Overlay:</span>
               <button
-                onClick={() => setShowOverlay(!showOverlay)}
+                onClick={() => {
+                  const newOverlayState = !showOverlay;
+                  setShowOverlay(newOverlayState);
+                  saveOverlayToLocalStorage(newOverlayState);
+                }}
                 className={`relative w-12 h-6 rounded-full transition-all duration-200 cursor-pointer ${
                   showOverlay ? 'bg-blue-600' : 'bg-gray-600'
                 }`}
