@@ -51,7 +51,7 @@ export default function Landing() {
       hueShift: 226,
       noiseIntensity: 0.1,
       scanlineIntensity: 0.2,
-      speed: 0.5,
+      speed: 2,
       scanlineFrequency: 2,
       warpAmount: 0.3
     },
@@ -75,7 +75,7 @@ export default function Landing() {
         colorBack: appliedColors.neuroNoise.colorBack,
         colorMid: appliedColors.neuroNoise.colorMid,
         colorFront: appliedColors.neuroNoise.colorFront,
-        speed: 0.8,
+        speed: 1,
         brightness: 0.1,
         contrast: 0.6,
         scale: 1.5,
@@ -94,7 +94,7 @@ export default function Landing() {
         ],
         distortion: 1,
         swirl: 0.8,
-        speed: 0.2,
+        speed: 1,
       }
     },
     {
@@ -128,7 +128,7 @@ export default function Landing() {
         colorBack: appliedColors.metaballs.colorBack,
         colorMid: appliedColors.metaballs.colorMid,
         colorFront: appliedColors.metaballs.colorFront,
-        speed: 0.3,
+        speed: 1,
         brightness: 0.2,
         contrast: 0.7,
       }
@@ -185,7 +185,7 @@ export default function Landing() {
       hueShift: 226,
       noiseIntensity: 0.1,
       scanlineIntensity: 0.2,
-      speed: 0.5,
+      speed: 2,
       scanlineFrequency: 2,
       warpAmount: 0.3
     },
