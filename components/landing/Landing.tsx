@@ -240,15 +240,6 @@ export default function Landing() {
     return stagingColors !== null;
   };
 
-  // Check if current shader is using default colors
-  const isUsingDefaultColors = () => {
-    const shaderTypes = ['neuroNoise', 'meshGradient', 'iridescence', 'darkVeil', 'metaballs'];
-    const currentShaderType = shaderTypes[selectedShader] as keyof typeof defaultColors;
-    
-    // Check staging colors first if they exist, otherwise check applied colors
-    const colorsToCheck = stagingColors || appliedColors;
-    return JSON.stringify(colorsToCheck[currentShaderType]) === JSON.stringify(defaultColors[currentShaderType]);
-  };
 
   // Types for color controls
   type ColorControl = {
@@ -503,6 +494,7 @@ export default function Landing() {
                       }}
                       className="w-6 h-6 rounded border border-white/20 bg-transparent cursor-pointer"
                     />
+                    <span className="text-white text-xs font-mono min-w-16">{(control.value as string).toUpperCase()}</span>
                   </div>
                 )}
               </div>
